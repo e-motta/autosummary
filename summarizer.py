@@ -63,7 +63,7 @@ app = dash.Dash(__name__,
                 external_scripts=external_scripts,
                 external_stylesheets=external_stylesheets)
 
-app.title = 'AutoSummarizer'
+app.title = 'AutoSummary'
 
 server = app.server
 
@@ -81,7 +81,7 @@ app.layout = html.Div([
         html.Div([
 
             html.H1([
-                "AutoSummarizer"
+                "AutoSummary"
                 ], style={'fontSize': 20}
                 ),
 

@@ -23,8 +23,7 @@ from dash.dependencies import Input, Output, State
 import nltk
 
 
-nltk.data.path.append("/usr/lib/python3.8/site-packages/nltk/tokenize")
-nltk.data.path.append("/app/.heroku/python3.8/site-packages/nltk/tokenize")
+nltk.download('punkt')
 
 # Available languages
 

@@ -83,19 +83,115 @@ server = app.server
 
 app.layout = html.Div([
 
-    html.Br(),
+    # html.Br(),
+
+    # Left Border
 
     html.Div(style={'width': '1%',
                     'display': 'inline-block'}),
 
+    # Body
+
     html.Div([
+
+        # Main header
 
         html.Div([
 
             html.H1([
                 "AutoSummary"
-                ], style={'fontSize': 20}
+                ], style={'fontSize': 18}
                 ),
+
+        ]),
+
+        html.Hr(),
+
+        # Language and sentence counter
+
+        html.Div([
+
+            html.Div([
+
+                # Language label
+
+                html.Div([
+
+                    html.Label(['Language:⠀'],
+                               style={'fontFamily': 'Helvetica',
+                                      'fontSize': 14}),
+
+                ], style={'text-align': 'left',
+                          'width': '100%'}
+                          ),
+
+                # Language dropdown menu
+
+                html.Div([
+
+                    dcc.Dropdown(
+                        id='dropdown',
+                        options=[{'label': i, 'value': i.lower()}
+                                 for i in languages.split()],
+                        value='english',
+                        multi=False,
+                        searchable=True,
+                        clearable=False,
+                        style={'fontFamily': 'Helvetica',
+                               'fontSize': 14}
+                        ),
+
+                ], style={'width': '50%',
+                          'verticalAlign': 'middle',
+                          'text-align': 'left'}
+                          ),
+
+
+            ], style={'width': '100%',
+                      'text-align': 'left'}
+            ),
+
+            html.Br(),
+
+            html.Div([
+
+                # Number of sentences label
+
+                html.Div([
+
+                    html.Label(['Number or sentences:⠀'],
+                               style={'fontFamily': 'Helvetica',
+                                      'fontSize': 14,
+                                      'text-align': 'right'}),
+
+                ], style={'text-align': 'left',
+                          'width': '100%'}
+                          ),
+
+                # Number of sentences input box
+
+                html.Div([
+
+                    dcc.Input(
+                        id='sentences-input', value=10, type='text'
+                        )
+
+                ], style={'width': '100%',
+                          'fontSize': 14}
+                          ),
+
+            ], style={'width': '100%',
+                      'text-align': 'left'}
+            ),
+
+        ], style={'width': '30%',
+                  'display': 'inline-block',
+                  'color': 'DarkSlateGray'}
+        ),
+
+        # Instructions
+
+        html.Div([
 
             html.Br(),
 
@@ -112,67 +208,11 @@ app.layout = html.Div([
                 ),
 
         ], style={'display': 'inline-block',
-                  'fontSize': 14}),
-
-        # Language label
-
-        html.Div([
-
-            html.Label(['Language:⠀'],
-                       style={'fontFamily': 'Helvetica',
-                              'fontSize': 14}),
-
-        ], style={'text-align': 'right',
-                  'width': '10%',
-                  'display': 'inline-block'}
-                  ),
-
-        # Language dropdown menu
-
-        html.Div([
-
-            dcc.Dropdown(
-                id='dropdown',
-                options=[{'label': i, 'value': i.lower()}
-                         for i in languages.split()],
-                value='english',
-                multi=False,
-                searchable=True,
-                clearable=False,
-                style={'fontFamily': 'Helvetica',
-                       'fontSize': 14}
-                ),
-
-        ], style={'width': '15%',
-                  'display': 'inline-block',
-                  'verticalAlign': 'middle'}
-                  ),
-
-        # Number of sentences label
-
-        html.Div([
-
-            html.Label(['Number or sentences:⠀'],
-                       style={'fontFamily': 'Helvetica',
-                              'fontSize': 14}),
-
-        ], style={'text-align': 'right',
-                  'width': '15%',
-                  'display': 'inline-block'}
-                  ),
-
-        # Number of sentences input box
-
-        html.Div([
-
-            dcc.Input(
-                id='sentences-input', value=10, type='text'
-                )
-
-        ], style={'width': '5%',
-                  'display': 'inline-block',
-                  'fontSize': 14}
-                  ),
+                  'fontSize': 14,
+                  'width': '70%',
+                  'color': 'DarkSlateGray',
+                  'vertical-align': 'top'}
+        ),
 
         html.Br(),
         html.Br(),
@@ -185,7 +225,7 @@ app.layout = html.Div([
                 id='textarea',
                 value="",
                 style={'width': '100%',
-                       'height': 160,
+                       'height': 100,
                        'fontFamily': 'Garamond',
                        'fontSize': 18},
             ),
@@ -213,6 +253,8 @@ app.layout = html.Div([
 
     ], style={'width': '98%',
               'display': 'inline-block'}),
+
+    # Right border
 
     html.Div(style={'width': '1%',
                     'display': 'inline-block'})

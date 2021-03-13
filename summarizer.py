@@ -11,7 +11,10 @@ from __future__ import division, print_function, unicode_literals
 from sumy.parsers.html import HtmlParser
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.lsa import LsaSummarizer as Summarizer
+from sumy.summarizers.lsa import LsaSummarizer
+from sumy.summarizers.lex_rank import LexRankSummarizer
+from sumy.summarizers.luhn import LuhnSummarizer
+from sumy.summarizers.text_rank import TextRankSummarizer
 from sumy.nlp.stemmers import Stemmer
 from sumy.utils import get_stop_words
 
@@ -35,7 +38,16 @@ languages = """
     Spanish
     """
 
-# External JS and CSS for the layout
+# Summarizers
+
+all_summarizers = {
+    'LsaSummarizer': LsaSummarizer,
+    'LexRankSummarizer': LexRankSummarizer,
+    'LuhnSummarizer': LuhnSummarizer,
+    'TextRankSummarizer': TextRankSummarizer
+    }
+
+# External JS and CSS for the app layout
 
 external_scripts = [
     'https://www.google-analytics.com/analytics.js',
@@ -95,6 +107,10 @@ app.layout = html.Div([
                 "2. Enter a URL starting with 'http', or paste plain text to be summarized"
                 ),
 
+            html.P(
+                "3. Select the summarization technique and click Submit"
+                ),
+
         ], style={'display': 'inline-block',
                   'fontSize': 14}),
 
@@ -102,7 +118,7 @@ app.layout = html.Div([
 
         html.Div([
 
-            html.Label(['Language: '],
+            html.Label(['Language:⠀'],
                        style={'fontFamily': 'Helvetica',
                               'fontSize': 14}),
 
@@ -132,11 +148,11 @@ app.layout = html.Div([
                   'verticalAlign': 'middle'}
                   ),
 
-        # Number of paragraphs label
+        # Number of sentences label
 
         html.Div([
 
-            html.Label(['Number or paragraphs: '],
+            html.Label(['Number or sentences:⠀'],
                        style={'fontFamily': 'Helvetica',
                               'fontSize': 14}),
 
@@ -145,12 +161,12 @@ app.layout = html.Div([
                   'display': 'inline-block'}
                   ),
 
-        # Number of paragraphs input box
+        # Number of sentences input box
 
         html.Div([
 
             dcc.Input(
-                id='paragraphs-input', value=10, type='text'
+                id='sentences-input', value=10, type='text'
                 )
 
         ], style={'width': '5%',
@@ -173,7 +189,21 @@ app.layout = html.Div([
                        'fontFamily': 'Garamond',
                        'fontSize': 18},
             ),
+
+            dcc.RadioItems(
+                options=[
+                    {'label': '⠀LSA⠀⠀⠀⠀', 'value': 'LsaSummarizer'},
+                    {'label': '⠀Lex Rank⠀⠀⠀⠀', 'value': 'LexRankSummarizer'},
+                    {'label': '⠀Luhn⠀⠀⠀⠀', 'value': 'LuhnSummarizer'},
+                    {'label': '⠀Text Rank⠀⠀⠀⠀', 'value': 'TextRankSummarizer'},
+                ],
+                id='summarizer',
+                value='LsaSummarizer',
+                labelStyle={'display': 'inline-block',
+                            'fontSize': 14}),
+
             html.Button('Submit', id='textarea-button', n_clicks=0),
+
             html.Div(id='textarea-output',
                      style={'whiteSpace': 'pre-line',
                             'fontFamily': 'Garamond',
@@ -194,10 +224,11 @@ app.layout = html.Div([
     Output('textarea-output', 'children'),
     [Input('textarea-button', 'n_clicks'),
      Input('dropdown', 'value'),
-     Input('paragraphs-input', 'value')],
+     Input('sentences-input', 'value'),
+     Input('summarizer', 'value')],
     State('textarea', 'value')
 )
-def update_summary(n_clicks, dropdown, sentences_count, textarea):
+def update_summary(n_clicks, dropdown, sentences_count, summarizer_opt, textarea):
     """Update textbox with summary.
 
     Parameters must be passed in the same order as Inputs and State
@@ -220,6 +251,7 @@ def update_summary(n_clicks, dropdown, sentences_count, textarea):
         Summary of the text, once the button is pressed.
 
     """
+    # Button is clicked
     if n_clicks > 0:
 
         # Summarize from URL
@@ -230,10 +262,10 @@ def update_summary(n_clicks, dropdown, sentences_count, textarea):
         else:
             parser = PlaintextParser.from_string(textarea, Tokenizer(dropdown))
 
-        return summarize(textarea, dropdown, sentences_count, parser)
+        return summarize(textarea, dropdown, sentences_count, parser, summarizer_opt)
 
 
-def summarize(text, language, sentences_count, parser):
+def summarize(text, language, sentences_count, parser, summarizer_opt):
     """Summarize text from input.
 
     Parameters
@@ -255,7 +287,7 @@ def summarize(text, language, sentences_count, parser):
     """
     stemmer = Stemmer(language)
 
-    summarizer = Summarizer(stemmer)
+    summarizer = all_summarizers[summarizer_opt](stemmer)
     summarizer.stop_words = get_stop_words(language)
 
     sentences = [str(sentence)

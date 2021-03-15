@@ -5,9 +5,6 @@ Created on Thu Mar 11 20:24:43 2021
 
 @author: Eduardo
 """
-from __future__ import absolute_import
-from __future__ import division, print_function, unicode_literals
-
 from sumy.parsers.html import HtmlParser
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
@@ -32,7 +29,6 @@ languages = """
     French
     German
     Italian
-    Japanese
     Portuguese
     Slovak
     Spanish
@@ -41,31 +37,31 @@ languages = """
 # Summarizers
 
 all_summarizers = {
-    'LsaSummarizer': LsaSummarizer,
-    'LexRankSummarizer': LexRankSummarizer,
-    'LuhnSummarizer': LuhnSummarizer,
-    'TextRankSummarizer': TextRankSummarizer
+    'LSA': LsaSummarizer,
+    'LexRank': LexRankSummarizer,
+    'Luhn': LuhnSummarizer,
+    'TextRank': TextRankSummarizer
     }
 
-# External JS and CSS for the app layout
+# External JS and CSS for the app
 
 external_scripts = [
     'https://www.google-analytics.com/analytics.js',
     {'src': 'https://cdn.polyfill.io/v2/polyfill.min.js'},
     {
-        'src': 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.core.js',
-        'integrity': 'sha256-Qqd/EfdABZUcAxjOkMi8eGEivtdTkh3b65xCZL4qAQA=',
-        'crossorigin': 'anonymous'
+     'src': 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.core.js',
+     'integrity': 'sha256-Qqd/EfdABZUcAxjOkMi8eGEivtdTkh3b65xCZL4qAQA=',
+     'crossorigin': 'anonymous'
     }
 ]
 
 external_stylesheets = [
     'https://codepen.io/chriddyp/pen/bWLwgP.css',
     {
-        'href': 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css',
-        'rel': 'stylesheet',
-        'integrity': 'sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO',
-        'crossorigin': 'anonymous'
+     'href': 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css',
+     'rel': 'stylesheet',
+     'integrity': 'sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO',
+     'crossorigin': 'anonymous'
     }
 ]
 
@@ -83,24 +79,24 @@ server = app.server
 
 app.layout = html.Div([
 
-    # html.Br(),
-
     # Left Border
 
     html.Div(style={'width': '1%',
                     'display': 'inline-block'}),
 
-    # Body
+    # Main
 
     html.Div([
 
-        # Main header
+        # Header
 
         html.Div([
 
             html.H1([
                 "AutoSummary"
-                ], style={'fontSize': 18}
+                ], style={'fontSize': 20,
+                          'fontFamily': 'Helvetica',
+                          'margin-top': '0.3em'}
                 ),
 
         ]),
@@ -211,7 +207,7 @@ app.layout = html.Div([
                   'fontSize': 14,
                   'width': '70%',
                   'color': 'DarkSlateGray',
-                  'vertical-align': 'top'}
+                  'verticalAlign': 'top'}
         ),
 
         html.Br(),
@@ -224,6 +220,7 @@ app.layout = html.Div([
             dcc.Textarea(
                 id='textarea',
                 value="",
+                placeholder='http... or plain text',
                 style={'width': '100%',
                        'height': 100,
                        'fontFamily': 'Garamond',
@@ -232,13 +229,13 @@ app.layout = html.Div([
 
             dcc.RadioItems(
                 options=[
-                    {'label': '⠀LSA⠀⠀⠀⠀', 'value': 'LsaSummarizer'},
-                    {'label': '⠀Lex Rank⠀⠀⠀⠀', 'value': 'LexRankSummarizer'},
-                    {'label': '⠀Luhn⠀⠀⠀⠀', 'value': 'LuhnSummarizer'},
-                    {'label': '⠀Text Rank⠀⠀⠀⠀', 'value': 'TextRankSummarizer'},
+                    {'label': '⠀LSA⠀⠀⠀⠀', 'value': 'LSA'},
+                    {'label': '⠀Lex Rank⠀⠀⠀⠀', 'value': 'LexRank'},
+                    {'label': '⠀Luhn⠀⠀⠀⠀', 'value': 'Luhn'},
+                    {'label': '⠀Text Rank⠀⠀⠀⠀', 'value': 'TextRank'},
                 ],
                 id='summarizer',
-                value='LsaSummarizer',
+                value='LSA',
                 labelStyle={'display': 'inline-block',
                             'fontSize': 14}),
 
@@ -270,7 +267,8 @@ app.layout = html.Div([
      Input('summarizer', 'value')],
     State('textarea', 'value')
 )
-def update_summary(n_clicks, dropdown, sentences_count, summarizer_opt, textarea):
+def update_summary(n_clicks, dropdown_language, sentences_count,
+                   summarizer_opt, text_area):
     """Update textbox with summary.
 
     Parameters must be passed in the same order as Inputs and State
@@ -284,7 +282,7 @@ def update_summary(n_clicks, dropdown, sentences_count, summarizer_opt, textarea
         Value (language) selected in the dropdown menu.
     sentences_count : int
         Number of sentences in the summary.
-    textarea : str
+    text_area : str
         Input text: can be URL or plain text.
 
     Returns
@@ -297,45 +295,25 @@ def update_summary(n_clicks, dropdown, sentences_count, summarizer_opt, textarea
     if n_clicks > 0:
 
         # Summarize from URL
-        if textarea.startswith('http'):
-            parser = HtmlParser.from_url(textarea.strip(), Tokenizer(dropdown))
+        if text_area.startswith('http'):
+            parser = HtmlParser.from_url(text_area.strip(),
+                                         Tokenizer(dropdown_language))
 
         # Summarize plain text
         else:
-            parser = PlaintextParser.from_string(textarea, Tokenizer(dropdown))
+            parser = PlaintextParser.from_string(text_area,
+                                                 Tokenizer(dropdown_language))
 
-        return summarize(textarea, dropdown, sentences_count, parser, summarizer_opt)
+        stemmer = Stemmer(dropdown_language)
 
+        summarizer = all_summarizers[summarizer_opt](stemmer)
+        summarizer.stop_words = get_stop_words(dropdown_language)
 
-def summarize(text, language, sentences_count, parser, summarizer_opt):
-    """Summarize text from input.
+        sentences = [str(sentence)
+                     for sentence in summarizer(parser.document,
+                                                sentences_count)]
 
-    Parameters
-    ----------
-    text : str
-        Input that will be summarized.
-    language : str
-        Language selected in the dropdown menu.
-    sentences_count : int
-        Number of sentences in the summary.
-    parser : sumy.parsers object
-        Analyses the text depending on source.
-
-    Returns
-    -------
-    str
-        Summary of the text.
-
-    """
-    stemmer = Stemmer(language)
-
-    summarizer = all_summarizers[summarizer_opt](stemmer)
-    summarizer.stop_words = get_stop_words(language)
-
-    sentences = [str(sentence)
-                 for sentence in summarizer(parser.document, sentences_count)]
-
-    return '\n' + '\n\n'.join(sentences)
+        return '\n' + '\n\n'.join(sentences)
 
 
 if __name__ == '__main__':
